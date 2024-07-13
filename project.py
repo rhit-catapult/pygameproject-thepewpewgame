@@ -2,12 +2,10 @@ import pygame
 import sys
 import random
 import time
-
-
 def main():
     # turn on pygame
     pygame.init()
-
+#this is a comment
     # create a screen
     pygame.display.set_caption("Cool Project")
     # TODO: Change the size of the screen as you see fit!
