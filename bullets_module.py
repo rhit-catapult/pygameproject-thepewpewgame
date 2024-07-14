@@ -152,12 +152,8 @@ def main():
 
     gun1 = Gun(screen, 1)
     gun2 = Gun(screen, 2)
-    click = 0
-    btype = 1
     btype2 = 1
     yvalue = 500
-    pushed = []
-    switch = False
     message_text = "Normal"
     font = pygame.font.Font(None, 25)
     while True:
