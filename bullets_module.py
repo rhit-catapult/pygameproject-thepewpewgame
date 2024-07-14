@@ -13,8 +13,8 @@ class Bullet:
         self.direction = direction
         if type == 1:
             self.damage = 10  # amt. of health subtracted | higher = more damage
-            self.speed = 8  # pixels moved per tick     | higher = faster
-            self.usage = 2  # energy used per shot      | higher = more usage
+            self.speed = 8  # pixels moved per tick       | higher = faster
+            self.usage = 2  # energy used per shot        | higher = more usage
             # special = none
             self.color = (255, 255, 0)
             self.bullet = pygame.draw.rect(self.screen, self.color, (self.x - 10, self.y - 3, 20, 6))
