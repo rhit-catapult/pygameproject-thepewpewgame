@@ -26,7 +26,7 @@ class Ship:
             self.x = screen.get_width()-50
             self.colorB = (255, 0, 255)
             self.colorA = (155, 0, 155)
-
+        self.colliding = False
         self.y = screen.get_height()/2
         self.boom_factor = 0
         self.collider = pygame.draw.rect(self.screen, (0, 0, 0), (self.x-12,self.y-20, 25, 40))
@@ -38,7 +38,7 @@ class Ship:
                     self.health -= other.damage
                     hit.play()
                     gun.bullets.remove(other)
-                    return True
+                    self.colliding = True
             elif other.type == 2:
                 if self.collider.colliderect(other.x - 12, other.y - 10, 23, 20):
                     self.health -= other.damage
@@ -46,29 +46,27 @@ class Ship:
                     for i in range(10):
                         gun.bullets.append(Bullet(gun.screen, other.x, other.y, 9, gun.direction))
                     gun.bullets.remove(other)
-                    return True
+                    self.colliding = True
             elif other.type == 3:
                 if self.collider.colliderect(other.x - 26, other.y - 2, 52, 4):
                     self.health -= other.damage
                     hit.play()
                     gun.bullets.remove(other)
-                    return True
+                    self.colliding = True
             elif other.type == 4:
                 if self.collider.colliderect(other.x - 5, other.y - 30, 10, 60):
                     gun.bullets.remove(other)
                     hit.play()
-                    return True
+                    self.colliding = True
             elif other.type == 9:
-                if abs(self.x - other.x)**2 <= (50*other.explosion_factor) ** 2 and abs(
-                        self.y - other.y)**2 <= (50*other.explosion_factor) ** 2:
+                if abs(self.x - other.x) <= 50 and abs(self.y - other.y) <= 50:
                     self.health -= other.damage
-                    hit.play()
-                    return True
-            return False
+                    self.colliding = True
+            self.colliding = False
 
 
 
-    def update(self, y, gun):
+    def update(self, y):
         self.y = y
         self.collider = pygame.draw.rect(self.screen, (0, 0, 0), (self.x - 12, self.y - 20, 25, 40))
         if self.player == 1:
@@ -89,8 +87,7 @@ class Ship:
                 (self.x - 15, self.y - 4),
                 (self.x - 15, self.y + 4), (self.x - 6, self.y + 4), (self.x + 2, self.y + 20),
                 (self.x + 8, self.y + 20))))
-        self.check_collision(gun)
-        if self.health<=0 or self.boom_factor != 0:
+        if self.health <= 0 or self.boom_factor != 0:
             self.boom()
 
 
@@ -139,7 +136,7 @@ class Bullet:
             laser2.play()
 
         elif type == 3:
-            self.damage = 15
+            self.damage = 10
             self.speed = 15
             self.usage = 40
             # special = penetration (spawn 3 bullets inside eachother, 60 damage total)
@@ -158,7 +155,7 @@ class Bullet:
             laser4.play()
 
         elif type == 9:
-            self.damage = 2
+            self.damage = 0.2
             self.speed = 0
             self.usage = 0
             self.color = (255, 150, 0)
@@ -269,6 +266,7 @@ class Gun:
         for bullet in self.bullets:
             if bullet.type == 9 and bullet.explosion_factor <= 0:
                 self.bullets.remove(bullet)
+
             bullet.move()
             if bullet.x>self.screen.get_width() or bullet.x<0:
                 if self.bullets.__contains__(bullet):
@@ -277,6 +275,8 @@ class Gun:
             for other in otherGun.bullets:
                 if abs(bullet.y-other.y)<100 and abs(bullet.x-other.x)<100:
                     if bullet.check_collide(other):
+                        if self.type == 9:
+                            return
                         if other.type == 9:
                             if self.bullets.__contains__(bullet) and bullet.type != 9:
                                 self.bullets.remove(bullet)
@@ -287,6 +287,7 @@ class Gun:
                                 self.bullets.remove(bullet)
                             otherGun.bullets.remove(other)
                             hit.play()
+
                         elif other.type == 4:
                             return
 
@@ -569,7 +570,10 @@ def game():
     speed_mul1 = 1
     speed_mul2 = 1
 
-
+    o = 0
+    l = 0
+    k = 0
+    m = 0
 
     while True:
         clock.tick(60)
@@ -578,66 +582,88 @@ def game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+
             if pushed_keys[pygame.K_d] and btype < 4:
-                btype += 1
-                if btype == 1:
-                    gun1.updateType(1)
-                    message_text1 = "Normal"
-                elif btype == 2:
-                    gun1.updateType(2)
-                    message_text1 = "Bomb"
-                elif btype == 3:
-                    gun1.updateType(3)
-                    message_text1 = "Penetrating"
-                elif btype == 4:
-                    gun1.updateType(4)
-                    message_text1 = "Reflective"
+                if o == 0:
+                    btype += 1
+                    if btype == 1:
+                        gun1.updateType(1)
+                        message_text1 = "Normal"
+                    elif btype == 2:
+                        gun1.updateType(2)
+                        message_text1 = "Bomb"
+                    elif btype == 3:
+                        gun1.updateType(3)
+                        message_text1 = "Penetrating"
+                    elif btype == 4:
+                        gun1.updateType(4)
+                        message_text1 = "Reflective"
+
+                o = 1
+            else:
+                o = 0
             if pushed_keys[pygame.K_a] and btype > 1:
-                btype -= 1
-                if btype == 1:
-                    gun1.updateType(1)
-                    message_text1 = "Normal"
-                elif btype == 2:
-                    gun1.updateType(2)
-                    message_text1 = "Bomb"
-                elif btype == 3:
-                    gun1.updateType(3)
-                    message_text1 = "Penetrating"
-                elif btype == 4:
-                    gun1.updateType(4)
-                    message_text1 = "Reflective"
+                if l == 0:
+                    btype -= 1
+                    if btype == 1:
+                        gun1.updateType(1)
+                        message_text1 = "Normal"
+                    elif btype == 2:
+                        gun1.updateType(2)
+                        message_text1 = "Bomb"
+                    elif btype == 3:
+                        gun1.updateType(3)
+                        message_text1 = "Penetrating"
+                    elif btype == 4:
+                        gun1.updateType(4)
+                        message_text1 = "Reflective"
+                l = 1
+            else:
+                l = 0
 
             if pushed_keys[pygame.K_RIGHT] and btype2 < 4:
                 btype2 += 1
-                if btype2 == 1:
-                    gun2.updateType(1)
-                    message_text2 = "Normal"
-                elif btype2 == 2:
-                    gun2.updateType(2)
-                    message_text2 = "Bomb"
-                elif btype2 == 3:
-                    gun2.updateType(3)
-                    message_text2 = "Penetrating"
-                elif btype2 == 4:
-                    gun2.updateType(4)
-                    message_text2 = "Reflective"
-            if pushed_keys[pygame.K_LEFT] and btype2 > 1:
-                btype2 -= 1
-                if btype2 == 1:
-                    gun2.updateType(1)
-                    message_text2 = "Normal"
-                elif btype2 == 2:
-                    gun2.updateType(2)
-                    message_text2 = "Bomb"
-                elif btype2 == 3:
-                    gun2.updateType(3)
-                    message_text2 = "Penetrating"
-                elif btype2 == 4:
-                    gun2.updateType(4)
-                    message_text2 = "Reflective"
+                if k == 0:
 
-        player1.update(yvalue1, gun2)
-        player2.update(yvalue2, gun1)
+                    if btype2 == 1:
+                        gun2.updateType(1)
+                        message_text2 = "Normal"
+                    elif btype2 == 2:
+                        gun2.updateType(2)
+                        message_text2 = "Bomb"
+                    elif btype2 == 3:
+                        gun2.updateType(3)
+                        message_text2 = "Penetrating"
+                    elif btype2 == 4:
+                        gun2.updateType(4)
+                        message_text2 = "Reflective"
+                k = 1
+            else:
+                k = 0
+            if pushed_keys[pygame.K_LEFT] and btype2 > 1:
+                if m == 0:
+
+                    btype2 -= 1
+                    if btype2 == 1:
+                        gun2.updateType(1)
+                        message_text2 = "Normal"
+                    elif btype2 == 2:
+                        gun2.updateType(2)
+                        message_text2 = "Bomb"
+                    elif btype2 == 3:
+                        gun2.updateType(3)
+                        message_text2 = "Penetrating"
+                    elif btype2 == 4:
+                        gun2.updateType(4)
+                        message_text2 = "Reflective"
+                m = 1
+            else:
+                m = 0
+        player1.update(yvalue1)
+        player2.update(yvalue2)
+
+        player1.check_collision(gun2)
+        player2.check_collision(gun1)
 
         for asteroid in asteroids:
             asteroid.draw(screen)
@@ -647,8 +673,8 @@ def game():
         if player1.exploded() or player2.exploded():
             message_text1 = "Good Game"
             message_text2 = "Good Game"
-            p += 1
-            if p <= 180:
+
+            if player1.boom_factor < 180 and player2.boom_factor < 180:
                 end_explosion.play()
 
             if player1.boom_factor > 320 or player2.boom_factor > 320:
